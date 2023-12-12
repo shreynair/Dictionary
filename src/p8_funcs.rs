@@ -1,6 +1,9 @@
 // NOTE: Add some use statements here to bring in functionality needed
 // for file I/O, regular expressions, edit_distance.
-
+use regex::Regex;
+use edit_distance::edit_distance;
+use std::fs::File;              // for file io
+use std::io::{prelude::*, BufReader}; 
 // TODO: Complete the functions outlined below
 
 /// Allocate a vector and read all newline-separated strings from the
@@ -14,7 +17,28 @@
 /// load_stringvec("test-data/small-dict.txt") -> ["APPLE","BANANA","CARROT"]
 /// load_stringvec("test-data/google-10000-english.txt") -> ["THE", "OF", "AND", "TO", ...]
 pub fn load_string_upper(fname: &str) -> Vec<String> {
+  let mut collection: Vec<String> = vec![];
+  let file = match File::open(fname) {
+    Err(why) => {println!("Couldn't open file {}: {}", fname, why); panic!()},    
+    Ok(file) => file
+  };
 
+  let reader = BufReader::new(file);
+
+  for line in reader.lines() {
+    let text = match line {
+      Err(why) => panic!("Couldn't read line: {}",why),
+      Ok(text) => text
+    };
+    collection.push(text.to_uppercase().to_string());
+  }
+  /*
+  let lst: Vec<&str> = fname.split('\n').collect();
+  for w in lst {
+    collection.push(w.to_uppercase().to_string());
+  }
+  */
+  return collection;
 }
 
 /// Iterate through the words in String `text` and construct a
@@ -49,6 +73,28 @@ pub fn load_string_upper(fname: &str) -> Vec<String> {
 ///             -> "All your **BASS* are **BELONG** 2 us!!" // corrected version
 /// 
 pub fn mark_corrected(text: &String, dict: &Vec<String>) -> String {
+  let mut corrected = String::from("");
+  let mut lastPos = 0;
+  let length = text.len();
+  let re = Regex::new(r"[a-zA-Z']+").unwrap();
+
+  for w in re.captures_iter(text) {
+    let Some(cap) = w.get(0) else {todo!()};
+    let start = cap.start();
+    let end = cap.end();
+    
+    corrected.push_str(&text[lastPos..start]);
+    
+    lastPos = end;
+    
+    if dict.contains(&cap.as_str().to_uppercase()) {
+      corrected.push_str(&cap.as_str());
+    } else {
+      corrected.push_str(format!("{}{}{}", "**", &cap.as_str().to_uppercase(), "**").as_str());
+    }
+  }
+  corrected.push_str(&text[lastPos..length]);
+  return corrected;
 }
 
 /// Sets up a placeholde for implementing several correction schemes
@@ -83,7 +129,28 @@ pub fn correct_string<T>(text: &String,
                          -> String
 where T: Corrector                               // 3rd param must impl Corrector to have correct_word() function
 {
+  let mut corrected = String::from("");
+  let mut lastPos = 0;
+  let length = text.len();
+  let re = Regex::new(r"[a-zA-Z']+").unwrap();
 
+  for w in re.captures_iter(text) {
+    let Some(cap) = w.get(0) else {todo!()};
+    let start = cap.start();
+    let end = cap.end();
+    
+    corrected.push_str(&text[lastPos..start]);
+    
+    lastPos = end;
+    
+    if dict.contains(&cap.as_str().to_uppercase()) {
+      corrected.push_str(&cap.as_str());
+    } else {
+      corrected.push_str(corrector.correct_word(&cap.as_str()).as_str());
+    }
+  }
+  corrected.push_str(&text[lastPos..length]);
+  return corrected;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +166,7 @@ pub struct MarkCorrector {
 impl MarkCorrector {
   /// Create a MarkCorrector with the given begin/end markings
   pub fn new(beg_mark: &str, end_mark: &str) -> MarkCorrector{
+    return MarkCorrector {beg_mark: beg_mark.to_string(), end_mark: end_mark.to_string()};
   }
 }
 
@@ -118,6 +186,7 @@ impl Corrector for MarkCorrector {
   /// mc.correct_word("incorrect") -> "INCORRECT!fixme:"
   /// mc.correct_word("blergh") -> "BLERGH!fixme"
   fn correct_word(&mut self, word: &str) -> String{
+    return format!("{}{}{}", self.beg_mark, word.to_uppercase(), self.end_mark);
   }
 }
 
@@ -139,6 +208,7 @@ impl AutoCorrector {
   /// the AutoCorrector owns its own data. This simplifies ownership
   /// issues that would otherwise require lifetime annotations.
   pub fn new(dict_words: &Vec<String>, show_sub: bool) -> AutoCorrector{
+    return AutoCorrector {dict_words: dict_words.to_vec(), show_sub: show_sub};
   }
 
   /// Iterates through the AutoCorrector's dict_words and finds finds
@@ -177,6 +247,16 @@ impl AutoCorrector {
   /// ac.closest_word("bass")   -> ("",18446744073709551615)
   /// ac.closest_word("belong") -> ("",18446744073709551615)
   pub fn closest_word(&self, word: &str) -> (String,usize) {
+    let mut dist: usize = 18446744073709551615;
+    let mut corrected: String = String::from("");
+    for w in &self.dict_words {
+      if edit_distance(&w, word.to_uppercase().as_str()) < dist {
+        // println!("{dist}");
+        dist = edit_distance(&w, word.to_uppercase().as_str());
+        corrected = w.to_string();
+      }
+    }
+    return (corrected,dist);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
   }
 }
 
@@ -200,6 +280,12 @@ impl Corrector for AutoCorrector {
   /// ac.correct_word("bass") -> "(bass:BASE:1)"          // corrections include original
   /// ac.correct_word("us") -> "(us:US:0)"                // and closest word and edit
   /// ac.correct_word("belong") -> "(belong:ALL:5)"       // distance
-  fn correct_word(&mut self, word: &str) -> String{
+  fn correct_word(&mut self, word: &str) -> String {
+    let (corrected, dist) = self.closest_word(word);
+    if self.show_sub == true {
+      return format!("({}:{}:{})", word, corrected, dist);
+    } else {
+      return corrected;
+    }
   }
 }
