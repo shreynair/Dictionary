@@ -36,17 +36,17 @@ fn main(){
     // function.
     "mark" => {                 // MarkCorrector
       let mut mc = MarkCorrector::new(">>","<<");
-      format!("{}", correct_string(&file_text, &dict, &mut mc));
+      print!("{}", correct_string(&file_text, &dict, &mut mc));
 
     },
     "auto" => {                 // AutoCorrector with show_sub: false
       let mut ac = AutoCorrector::new(&dict, false);
-      format!("{}", correct_string(&file_text, &dict, &mut ac));
+      print!("{}", correct_string(&file_text, &dict, &mut ac));
 
     }
     "auto_show" => {            // AutoCorrector with show_sub: true
       let mut ac = AutoCorrector::new(&dict, true);
-      format!("{}", correct_string(&file_text, &dict, &mut ac));
+      print!("{}", correct_string(&file_text, &dict, &mut ac));
 
     }
     _ => {
