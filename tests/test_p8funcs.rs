@@ -1,5 +1,5 @@
 // test_p8funcs.rs: Unit/Integration tests for the project.
-// UPDATE: Tue Dec  5 05:35:46 PM EST 2023 
+// UPDATE: Tue Dec  5 09:34:17 PM EST 2023 
 // 
 // NOTE ON OUTPUT: println!() is used liberally in test functions as
 // on a test failure, the standard Rust testing framework shows
@@ -360,6 +360,7 @@ November 19, 1863
   let actual = mark_corrected(&String::from(input),&dict);
   let expect = input;           // no corrections made, all words in dictionary
   println!("expect: {expect}\nactual: {actual}");
+  assert!(expect == actual);
 }
 
 /// Simple implementation of a Corrector used for testing
