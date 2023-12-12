@@ -27,11 +27,7 @@ fn main(){
 
   println!("\nCORRECTED TEXT:");
 
-  let mut contents = match fs::read_to_string(&fname) {
-    Ok(contents) => contents,
-    Err(e) => {panic!("Error reading the file: {}", e)}
-  };
-  let mut dict = load_string_upper(&dict_fname);
+  let dict = load_string_upper(&dict_fname);
   
   match mode.as_str() {
     // TODO: fill in each case by creating an appropriate Corrector then
@@ -40,17 +36,17 @@ fn main(){
     // function.
     "mark" => {                 // MarkCorrector
       let mut mc = MarkCorrector::new(">>","<<");
-      format!("{}", correct_string(&contents, &dict, &mut mc));
+      format!("{}", correct_string(&file_text, &dict, &mut mc));
 
     },
     "auto" => {                 // AutoCorrector with show_sub: false
       let mut ac = AutoCorrector::new(&dict, false);
-      format!("{}", correct_string(&contents, &dict, &mut ac));
+      format!("{}", correct_string(&file_text, &dict, &mut ac));
 
     }
     "auto_show" => {            // AutoCorrector with show_sub: true
       let mut ac = AutoCorrector::new(&dict, true);
-      format!("{}", correct_string(&contents, &dict, &mut ac));
+      format!("{}", correct_string(&file_text, &dict, &mut ac));
 
     }
     _ => {
