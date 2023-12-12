@@ -74,7 +74,7 @@ pub fn load_string_upper(fname: &str) -> Vec<String> {
 /// 
 pub fn mark_corrected(text: &String, dict: &Vec<String>) -> String {
   let mut corrected = String::from("");
-  let mut lastPos = 0;
+  let mut last_pos = 0;
   let length = text.len();
   let re = Regex::new(r"[a-zA-Z']+").unwrap();
 
@@ -83,9 +83,9 @@ pub fn mark_corrected(text: &String, dict: &Vec<String>) -> String {
     let start = cap.start();
     let end = cap.end();
     
-    corrected.push_str(&text[lastPos..start]);
+    corrected.push_str(&text[last_pos..start]);
     
-    lastPos = end;
+    last_pos = end;
     
     if dict.contains(&cap.as_str().to_uppercase()) {
       corrected.push_str(&cap.as_str());
@@ -93,7 +93,7 @@ pub fn mark_corrected(text: &String, dict: &Vec<String>) -> String {
       corrected.push_str(format!("{}{}{}", "**", &cap.as_str().to_uppercase(), "**").as_str());
     }
   }
-  corrected.push_str(&text[lastPos..length]);
+  corrected.push_str(&text[last_pos..length]);
   return corrected;
 }
 
@@ -130,7 +130,7 @@ pub fn correct_string<T>(text: &String,
 where T: Corrector                               // 3rd param must impl Corrector to have correct_word() function
 {
   let mut corrected = String::from("");
-  let mut lastPos = 0;
+  let mut last_pos = 0;
   let length = text.len();
   let re = Regex::new(r"[a-zA-Z']+").unwrap();
 
@@ -139,9 +139,9 @@ where T: Corrector                               // 3rd param must impl Correcto
     let start = cap.start();
     let end = cap.end();
     
-    corrected.push_str(&text[lastPos..start]);
+    corrected.push_str(&text[last_pos..start]);
     
-    lastPos = end;
+    last_pos = end;
     
     if dict.contains(&cap.as_str().to_uppercase()) {
       corrected.push_str(&cap.as_str());
@@ -149,7 +149,7 @@ where T: Corrector                               // 3rd param must impl Correcto
       corrected.push_str(corrector.correct_word(&cap.as_str()).as_str());
     }
   }
-  corrected.push_str(&text[lastPos..length]);
+  corrected.push_str(&text[last_pos..length]);
   return corrected;
 }
 
